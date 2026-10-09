@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1766946066 source:c:\users\estell\desktop\pointer\main.c
+	<stdio.h>
+	<stdlib.h>
+
