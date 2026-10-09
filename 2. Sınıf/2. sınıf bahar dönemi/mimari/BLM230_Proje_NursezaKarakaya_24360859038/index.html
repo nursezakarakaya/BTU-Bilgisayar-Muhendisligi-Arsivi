@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamming Error-Correcting Code Simülatörü</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> <!--site arayüzünü güzelleştirmek için bootstrap kullandım-->
+    <style>
+        body {
+            background-color: #e4c5aa;
+            padding: 20px;
+        }
+        .bit-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #dee2e6;
+            margin: 2px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        .bit-box:hover {
+            transform: scale(1.1);
+        }
+        .bit-data {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+        .bit-parity {
+            background-color: #d1e7dd; /* Yeşilimsi - Eşlik bitleri için */
+            color: #0f5132;
+        }
+        .bit-error {
+            background-color: #f8d7da !important; /* Kırmızı - Hatalı bit için */
+            color: #842029 !important;
+            border-color: #f5c2c7 !important;
+        }
+        .bit-corrected {
+            background-color: #cff4fc !important; /* Mavi - Düzeltilmiş bit için */
+            color: #055160 !important;
+        }
+        .bit-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .bit-label-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .bit-index {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container bg-white p-4 rounded shadow-sm">
+    <h2 class="text-center mb-4">Hamming Error-Correcting Code Simülatörü</h2>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Veri Boyutu:</label>
+            <select id="dataSize" class="form-select">
+                <option value="8">8-bit</option>
+                <option value="16">16-bit</option>
+                <option value="32">32-bit</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Data In (İkili veriyi buraya giriniz):</label>
+            <input type="text" id="dataInput" class="form-control" placeholder="Örn: 10110011" maxlength="8">
+            <small class="text-muted" id="inputHelp">8 bit uzunluğunda 0 ve 1 giriniz.</small>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button id="calculateBtn" class="btn btn-warning w-100">Hesapla</button>
+        </div>
+    </div>
+
+    <hr>
+
+    <div id="memorySection" class="d-none">
+        <h4>Bellek (Memory) Görünümü</h4>
+        <p class="text-muted mb-1">Aşağıdaki bitlere tıklayarak yapay bir hata oluşturabilirsiniz.</p>
+        <div id="memoryBits" class="bit-container mb-4"></div>
+
+        <div class="card bg-light mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Syndrome ve Corrector</h5>
+                <p class="mb-1"><strong>Sendrom Değeri (Binary):</strong> <span id="syndromeBinary">-</span></p>
+                <p class="mb-1"><strong>Sendrom Değeri (Decimal):</strong> <span id="syndromeDecimal">-</span></p>
+                <p class="mb-1"><strong>Durum:</strong> <span id="statusText" class="badge bg-success">Hata Yok</span></p>
+            </div>
+        </div>
+
+        <h4>Düzeltilmiş Çıkış Verisi (Data Out)</h4>
+        <div id="outputBits" class="bit-container"></div>
+        
+    </div>
+    <div class="text-center mt-5 pt-3 border-top">
+            <p class="text-muted mb-2">Demo video linki:</p>
+            <a href="https://youtu.be/UVCqfW_cPpA?si=y2sUQDxhzkCcXK5o" target="_blank" class="btn btn-outline-danger px-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play-btn-fill me-2" viewBox="0 0 16 16">
+                    <path d="M0 12V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2M6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814z"/>
+                </svg>
+            </a>
+        </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // --- Arayüz Elementleri ---
+    const dataSizeSelect = document.getElementById('dataSize');
+    const dataInput = document.getElementById('dataInput');
+    const inputHelp = document.getElementById('inputHelp');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const memorySection = document.getElementById('memorySection');
+    const memoryBitsDiv = document.getElementById('memoryBits');
+    const outputBitsDiv = document.getElementById('outputBits');
+    const syndromeBinarySpan = document.getElementById('syndromeBinary');
+    const syndromeDecimalSpan = document.getElementById('syndromeDecimal');
+    const statusTextSpan = document.getElementById('statusText');
+
+    let currentHammingArray = []; // Bellekteki mevcut durum (1-tabanlı dizi)
+    let parityCount = 0;
+    let totalLength = 0;
+
+    // Boyut seçimi değiştiğinde input sınırlarını ayarlama
+    dataSizeSelect.addEventListener('change', (e) => {
+        const size = e.target.value;
+        dataInput.maxLength = size;
+        dataInput.value = "";
+        inputHelp.innerText = `${size} bit uzunluğunda 0 ve 1 giriniz.`;
+    });
+
+    // İkili (Binary) doğrulama
+    dataInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^01]/g, '');
+    });
+
+    // Hesapla Butonu
+    calculateBtn.addEventListener('click', () => {
+        const size = parseInt(dataSizeSelect.value);
+        let data = dataInput.value;
+
+        // Girilen veri eksikse solunu 0 ile doldur
+        if (data.length < size) {
+            data = data.padStart(size, '0');
+            dataInput.value = data;
+        }
+
+        generateHammingCode(data);
+        renderMemory();
+        checkAndCorrect();
+        memorySection.classList.remove('d-none');
+    });
+
+    // Hamming kodu hesaplama (Even Parity)
+    function generateHammingCode(data) {
+        const m = data.length;
+        parityCount = 0;
+        
+        // Gerekli Parity bit sayısını bulma (2^r >= m + r + 1)
+        while (Math.pow(2, parityCount) < m + parityCount + 1) {
+            parityCount++;
+        }
+
+        totalLength = m + parityCount;
+        currentHammingArray = new Array(totalLength + 1).fill(0);
+
+        // Veri bitlerini yerleştirme (2'nin kuvvetleri boş kalacak şekilde)
+        let dataIndex = 0;
+        for (let i = 1; i <= totalLength; i++) {
+            if (!isPowerOfTwo(i)) {
+                currentHammingArray[i] = parseInt(data[dataIndex]);
+                dataIndex++;
+            }
+        }
+
+        // Parity bitlerini hesaplama (XOR kullanarak)
+        for (let i = 0; i < parityCount; i++) {
+            let pPos = Math.pow(2, i);
+            let parityVal = 0;
+
+            for (let k = 1; k <= totalLength; k++) {
+                if ((k & pPos) !== 0 && k !== pPos) {
+                    parityVal ^= currentHammingArray[k];
+                }
+            }
+            currentHammingArray[pPos] = parityVal;
+        }
+    }
+
+    // Bellekteki bitleri HTML'e çizme
+    function renderMemory() {
+        memoryBitsDiv.innerHTML = '';
+        
+        for (let i = 1; i <= totalLength; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'bit-label-container';
+
+            const indexLabel = document.createElement('span');
+            indexLabel.className = 'bit-index';
+            indexLabel.innerText = i;
+
+            const box = document.createElement('div');
+            box.className = `bit-box ${isPowerOfTwo(i) ? 'bit-parity' : 'bit-data'}`;
+            box.innerText = currentHammingArray[i];
+            
+            // Tıklama ile hata oluşturma
+            box.addEventListener('click', () => {
+                // Biti tersine çevirme (0->1, 1->0)
+                currentHammingArray[i] ^= 1; 
+                checkAndCorrect();
+            });
+
+            wrapper.appendChild(indexLabel);
+            wrapper.appendChild(box);
+            memoryBitsDiv.appendChild(wrapper);
+        }
+    }
+
+    // Sendrom hesaplama ve Hataları düzeltme
+    function checkAndCorrect() {
+        let syndrome = 0;
+        let syndromeBits = "";
+
+        // Sendrom değerini hesapla
+        for (let i = 0; i < parityCount; i++) {
+            let pPos = Math.pow(2, i);
+            let parityVal = 0;
+
+            for (let k = 1; k <= totalLength; k++) {
+                if ((k & pPos) !== 0) {
+                    parityVal ^= currentHammingArray[k];
+                }
+            }
+            
+            if (parityVal !== 0) {
+                syndrome += pPos;
+            }
+            syndromeBits = parityVal + syndromeBits; // LSB'den MSB'ye
+        }
+
+        syndromeBinarySpan.innerText = syndromeBits;
+        syndromeDecimalSpan.innerText = syndrome;
+
+        // Arayüzdeki renkleri sıfırla
+        const bitBoxes = memoryBitsDiv.querySelectorAll('.bit-box');
+        bitBoxes.forEach(box => box.classList.remove('bit-error'));
+
+        let correctedArray = [...currentHammingArray];
+
+        if (syndrome === 0) {
+            statusTextSpan.innerText = "Hata Yok";
+            statusTextSpan.className = "badge bg-success";
+        } else {
+            statusTextSpan.innerText = `Hatalı Bit Pozisyonu: ${syndrome}`;
+            statusTextSpan.className = "badge bg-danger";
+            
+            // Hatalı biti arayüzde kırmızı yapma
+            if(syndrome <= totalLength) {
+                bitBoxes[syndrome - 1].classList.add('bit-error');
+                // Hatalı biti düzeltme
+                correctedArray[syndrome] ^= 1; 
+            } else {
+                statusTextSpan.innerText += " (Tanımsız Pozisyon - Çoklu hata olabilir)";
+            }
+        }
+
+        // Çıkış Verisini (Data Out) oluşturma
+        renderOutput(correctedArray, syndrome);
+    }
+
+    // Düzeltilmiş veriyi çizme
+    function renderOutput(array, syndromePos) {
+        outputBitsDiv.innerHTML = '';
+        for (let i = 1; i <= totalLength; i++) {
+            if (!isPowerOfTwo(i)) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bit-label-container';
+
+                const indexLabel = document.createElement('span');
+                indexLabel.className = 'bit-index';
+                indexLabel.innerText = i; // Orijinal Hamming dizisindeki indeksi göster
+
+                const box = document.createElement('div');
+                box.className = 'bit-box bit-data';
+                box.innerText = array[i];
+
+                // Eğer bu veri biti az önce düzeltildiyse mavi renkle göster
+                if (syndromePos === i) {
+                    box.classList.add('bit-corrected');
+                }
+
+                wrapper.appendChild(indexLabel);
+                wrapper.appendChild(box);
+                outputBitsDiv.appendChild(wrapper);
+            }
+        }
+    }
+
+    // Bir sayının 2'nin kuvveti olup olmadığını kontrol eder
+    function isPowerOfTwo(n) {
+        return n > 0 && (n & (n - 1)) === 0;
+    }
+</script>
+</body>
+</html>
