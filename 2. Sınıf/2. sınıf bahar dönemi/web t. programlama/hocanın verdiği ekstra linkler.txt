@@ -1,0 +1,48 @@
+HTML TUT SİTESİ:
+https://www.w3schools.com/html/
+
+VSCODE İÇİN 9 FAYDALI HTML-CSS EKLENTİ PAKETİ
+https://www.youtube.com/watch?v=bDPrTxwtJWc
+
+HTML VALIDATOR:
+https://www.freeformatter.com/html-validator.html
+
+HTML TABLE GENERATOR:
+https://www.tablesgenerator.com/html_tables
+
+CSS UZUNLUK BİRİMLERİ:
+https://www.w3schools.com/cssref/css_units.php
+
+CSS TUT SİTESİ:
+https://www.w3schools.com/css/
+
+XML VALIDATOR:
+https://www.freeformatter.com/xml-validator-xsd.html
+
+JSON VALIDATOR:
+https://www.freeformatter.com/json-validator.html
+
+EN İYİ JAVASCRIPT FRAMEWORKLERİ:
+https://www.testmuai.com/blog/best-javascript-frameworks/
+
+EN POPÜLER PROGRAMLAMA DİLLERİ:
+https://pypl.github.io/PYPL.html
+
+XAMPP UYGULAMASINDA PHP HATALARINI GÖRÜNTÜLEMEK İÇİN YAPILMASI GEREKEN AYAR:
+https://www.youtube.com/watch?v=WCg7DsP1udQ
+
+PHP TUT:
+https://github.com/odan/learn-php
+
+PHP kodlamak için editörler--------
+PHP Storm (Jetbrains) https://www.jetbrains.com/phpstorm/
+VS Code (Php Eklentisi) https://code.visualstudio.com/docs/languages/php
+
+PHP+Apache+Mysql kurulumu (Ubuntu Linux)-----
+https://docs.vultr.com/install-linux-apache-mysql-and-php-lamp-on-ubuntu-20-04-lts
+
+XAMPP KURULUMU (Windows):
+https://www.youtube.com/watch?v=7C8Eb2VwTME
+
+PDO ile veri bağlantısı
+https://www.w3schools.com/php/php_mysql_connect.asp
