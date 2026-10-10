@@ -1,2 +1,2 @@
 # BTU-Bilgisayar-Muhendisligi-Arsivi
-Derslerde yararlandığım kaynaklar ve aldığım notlarının bazıları
+Üniversitede dersler için yararlandığım bazı kaynakları ve aldığım notları zamanla buraya ekliyorum. Umarım faydası olur, linki arkadaşlarınızla da paylaşabilirsiniz böylece daha çok kişi ulaşabilir. İyi çalışmalar :)🌼
